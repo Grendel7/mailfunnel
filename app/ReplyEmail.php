@@ -76,15 +76,14 @@ class ReplyEmail
      */
     public static function isAuthorized($sender)
     {
-        $authorized = Arr::first(config('app.recipients'), function ($key, $value) use ($sender) {
-            list($name, $email) = $value;
-            return $sender === $email;
-        });
+        $authorizedSenders = config('mailfunnel.authorized_senders');
+        $authorizedSenders[] = config('mailfunnel.recipient.email');
 
-        if ($authorized) {
+        if (in_array($sender, $authorizedSenders)) {
             return true;
         } else {
             Log::warning('Sender is not authorized', ['sender' => $sender]);
+            return false;
         }
     }
 
@@ -126,5 +125,15 @@ class ReplyEmail
     public function getToName()
     {
         return $this->data['to']['name'];
+    }
+
+    /**
+     * Get the internal data for testing purposes
+     *
+     * @return array
+     */
+    public function getData()
+    {
+        return $this->data;
     }
 }

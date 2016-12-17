@@ -27,6 +27,14 @@ $app->withFacades();
 
 $app->withEloquent();
 
+$app->configure('app');
+$app->configure('database');
+$app->configure('mail');
+$app->configure('mailfunnel');
+$app->configure('mailgun');
+$app->configure('postmark');
+$app->configure('sendgrid');
+
 /*
 |--------------------------------------------------------------------------
 | Register Container Bindings

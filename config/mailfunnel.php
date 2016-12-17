@@ -13,7 +13,7 @@ return [
 
     'recipient' => [
         'name' => env('MAIL_RECIPIENT_NAME', 'You'),
-        'email' => env('MAIL_RECIPIENT_EMAIL', 'test@example.com'),
+        'email' => env('MAIL_RECIPIENT_EMAIL', 'you@example.com'),
     ],
 
     /*
