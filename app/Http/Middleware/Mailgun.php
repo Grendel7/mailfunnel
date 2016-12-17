@@ -20,7 +20,10 @@ class Mailgun
         $signature = hash_hmac('sha256', $string, config('mailgun.webhook_key.' . $type));
 
         if ($signature != $request->get('signature')) {
-            Log::warning('Invalid Mailgun signature, calculated ' . $signature . ' but received ' . $request->get('signature'));
+            Log::warning('Invalid Mailgun signature', [
+                'received' => $request->get('signature'),
+                'expected' => $signature,
+            ]);
             abort(403, "Invalid Mailgun signature");
         }
 

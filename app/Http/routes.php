@@ -20,3 +20,6 @@ $app->post('reply', 'ReplyController@store');
 
 $app->post('mailgun/inbound', ['middleware' => 'mailgun', 'uses' => 'MailgunController@inbound']);
 $app->post('mailgun/outbound', ['middleware' => 'mailgun', 'uses' => 'MailgunController@outbound']);
+
+$app->post('postmark/inbound', ['middleware' => 'basic_auth:postmark', 'uses' => 'PostmarkController@inbound']);
+$app->post('postmark/outbound', ['middleware' => 'basic_auth:postmarkh', 'uses' => 'PostmarkController@outbound']);

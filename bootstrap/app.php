@@ -66,6 +66,7 @@ $app->singleton(
  $app->routeMiddleware([
      //'auth' => App\Http\Middleware\Authenticate::class,
      'mailgun' => App\Http\Middleware\Mailgun::class,
+     'basic_auth' => App\Http\Middleware\BasicAuth::class,
  ]);
 
 /*
