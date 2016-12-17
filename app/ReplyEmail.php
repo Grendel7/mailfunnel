@@ -65,7 +65,7 @@ class ReplyEmail
         return base64_encode(json_encode([
                 'from' => $from,
                 'to' => $to,
-            ])) . '@reply.grendl.nl';
+            ])) . '@' . config('mailfunnel.reply_domain');
     }
 
     /**

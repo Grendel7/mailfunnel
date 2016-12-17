@@ -29,4 +29,14 @@ return [
     'authorized_senders' => [
         //
     ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Reply Domain
+    |--------------------------------------------------------------------------
+    |
+    | The domain name used to generate addresses for outbound messages.
+    |
+    */
+    'reply_domain' => env('MAIL_REPLY_DOMAIN', 'reply.example.com'),
 ];
