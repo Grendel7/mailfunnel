@@ -126,14 +126,4 @@ class ReplyEmail
     {
         return $this->data['to']['name'];
     }
-
-    /**
-     * Get the internal data for testing purposes
-     *
-     * @return array
-     */
-    public function getData()
-    {
-        return $this->data;
-    }
 }

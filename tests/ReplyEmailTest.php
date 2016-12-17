@@ -1,8 +1,10 @@
 <?php
 
+namespace Test;
+
 use App\ReplyEmail;
 
-class ReplyEmailTest extends TestCase
+class ReplyEmailTest extends \TestCase
 {
     public $replyEmailAddress = 'eyJmcm9tIjoiVGVzdCBTZW5kZXIgPHNlbmRlckBleGFtcGxlLmNvbT4iLCJ0byI6IlRlc3QgUmVjZWl2ZXIgPHJlY2VpdmVyQGV4YW1wbGUuY29tPiJ9@reply.example.com';
     public $fromName = 'Test Sender';
@@ -32,18 +34,9 @@ class ReplyEmailTest extends TestCase
         $this->assertTrue(ReplyEmail::isAuthorized('you@example.com'));
     }
 
-    public function testExtractAddress()
+    public function testIsNotAuthorized()
     {
-        $this->assertEquals($this->replyEmail->getData(), [
-            'from' => [
-                'name' => $this->fromName,
-                'email' => $this->fromEmail,
-            ],
-            'to' => [
-                'name' => $this->toName,
-                'email' => $this->toEmail,
-            ]
-        ]);
+        $this->assertFalse(ReplyEmail::isAuthorized('hacker@example.com'));
     }
 
     public function testGetFromEmail()
