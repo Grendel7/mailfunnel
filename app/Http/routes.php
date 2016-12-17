@@ -17,3 +17,6 @@ $app->get('/', function () use ($app) {
 
 $app->get('reply', 'ReplyController@create');
 $app->post('reply', 'ReplyController@store');
+
+$app->post('mailgun/inbound', ['middleware' => 'mailgun', 'uses' => 'MailgunController@inbound']);
+$app->post('mailgun/outbound', ['middleware' => 'mailgun', 'uses' => 'MailgunController@outbound']);
