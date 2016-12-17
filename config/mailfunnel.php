@@ -29,16 +29,4 @@ return [
     'authorized_senders' => [
         //
     ],
-
-    /*
-    |--------------------------------------------------------------------------
-    | Log Duration
-    |--------------------------------------------------------------------------
-    |
-    | Mail Funnel can log the contents of inbound webhooks, which can be useful for debugging purposes.
-    | Not recommended with high e-mail volumes, limited database space or potentially unsafe hosting environments.
-    |
-    */
-
-    'log_days' => 90,
 ];
