@@ -22,4 +22,7 @@ $app->post('mailgun/inbound', ['middleware' => 'mailgun', 'uses' => 'MailgunCont
 $app->post('mailgun/outbound', ['middleware' => 'mailgun', 'uses' => 'MailgunController@outbound']);
 
 $app->post('postmark/inbound', ['middleware' => 'basic_auth:postmark', 'uses' => 'PostmarkController@inbound']);
-$app->post('postmark/outbound', ['middleware' => 'basic_auth:postmarkh', 'uses' => 'PostmarkController@outbound']);
+$app->post('postmark/outbound', ['middleware' => 'basic_auth:postmark', 'uses' => 'PostmarkController@outbound']);
+
+$app->post('sendgrid/inbound', ['middleware' => 'basic_auth:sendgrid', 'uses' => 'SendgridController@inbound']);
+$app->post('sendgrid/outbound', ['middleware' => 'basic_auth:sendgrid', 'uses' => 'SendgridController@outbound']);
