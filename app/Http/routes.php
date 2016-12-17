@@ -12,5 +12,8 @@
 */
 
 $app->get('/', function () use ($app) {
-    return $app->version();
+    return view('welcome');
 });
+
+$app->get('reply', 'ReplyController@create');
+$app->post('reply', 'ReplyController@store');
