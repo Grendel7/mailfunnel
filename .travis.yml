@@ -1,0 +1,19 @@
+language: php
+
+php:
+  - '5.6'
+  - '7.0'
+  - '7.1'
+
+before_script:
+  - cp .env.travis .env
+  - mysql -e 'create database mailfunnel;'
+  - composer self-update
+  - composer install --no-interaction
+  - ./artisan migrate
+
+script:
+  - vendor/bin/phpunit --coverage-clover build/logs/clover.xml
+
+after_success:
+  - travis_retry php vendor/bin/coveralls
