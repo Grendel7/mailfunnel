@@ -51,6 +51,12 @@ class InboundMail extends Forwardable
         return $this;
     }
 
+    /**
+     * Set the spam score reported by the upstream
+     *
+     * @param float $spamScore
+     * @return $this
+     */
     public function setSpamScore($spamScore)
     {
         $this->spamScore = $spamScore;
@@ -63,7 +69,7 @@ class InboundMail extends Forwardable
      *
      * @return string
      */
-    protected function getSafeOriginalFrom()
+    public function getSafeOriginalFrom()
     {
         return str_replace(['<', '>'], "'", $this->originalFrom);
     }
@@ -73,7 +79,7 @@ class InboundMail extends Forwardable
      *
      * @return string
      */
-    protected function getOriginalToEmail()
+    public function getOriginalToEmail()
     {
         $matches = [];
         if (preg_match('/<(.*)>/', $this->originalTo, $matches)) {
@@ -119,7 +125,7 @@ class InboundMail extends Forwardable
 
         Log::info('Received message for provider '.$this->provider, $all);
 
-        if ($this->spamScore >= config($this->provider.'.spamassassin_score')) {
+        if ($this->spamScore >= config($this->provider.'.spamassassin_score', 5)) {
             $this->saveEmail($address,
                 Message::STATUS_REJECTED_LOCAL,
                 Message::REASON_SPAM_SCORE

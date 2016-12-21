@@ -112,6 +112,36 @@ class Forwardable extends Mailable
     }
 
     /**
+     * Get the HTML view name
+     *
+     * @return string
+     */
+    public function getView()
+    {
+        return $this->view;
+    }
+
+    /**
+     * Get the plain text view name
+     *
+     * @return string
+     */
+    public function getTextView()
+    {
+        return $this->textView;
+    }
+
+    /**
+     * Get the view data
+     *
+     * @return array
+     */
+    public function getViewData()
+    {
+        return $this->viewData;
+    }
+
+    /**
      * Get the forwarded headers which should not be included as-is
      *
      * @return array
