@@ -6,18 +6,22 @@ use App\ReplyEmail;
 
 class ReplyEmailTest extends \TestCase
 {
-    public $replyEmailAddress = 'eyJmcm9tIjoiVGVzdCBTZW5kZXIgPHNlbmRlckBleGFtcGxlLmNvbT4iLCJ0byI6IlRlc3QgUmVjZWl2ZXIgPHJlY2VpdmVyQGV4YW1wbGUuY29tPiJ9@reply.example.com';
+    public $replyEmailAddress;
     public $fromName = 'Test Sender';
     public $fromEmail = 'sender@example.com';
     public $toName = 'Test Receiver';
     public $toEmail = 'receiver@example.com';
 
+    /**
+     * @var ReplyEmail
+     */
     public $replyEmail;
 
     public function setUp()
     {
         parent::setUp();
 
+        $this->replyEmailAddress = ReplyEmail::generate("{$this->fromName} <{$this->fromEmail}>", "{$this->toName} <{$this->toEmail}>");
         $this->replyEmail = new ReplyEmail($this->replyEmailAddress);
     }
 
@@ -57,5 +61,10 @@ class ReplyEmailTest extends \TestCase
     public function testGetToName()
     {
         $this->assertEquals($this->replyEmail->getToName(), $this->toName);
+    }
+
+    public function testExtractAddress()
+    {
+        $this->assertEquals(['name' => null, 'email' => 'test@example.com'], $this->replyEmail->extractAddress('test@example.com'));
     }
 }

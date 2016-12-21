@@ -27,15 +27,11 @@ class ReplyEmail
     /**
      * Split an address into a name and e-mail (if required)
      *
-     * @param string|array $address
+     * @param string $address
      * @return array
      */
     public function extractAddress($address)
     {
-        if (!is_string($address)) {
-            return $address;
-        }
-
         if (strpos($address, '<') === false) {
             return [
                 'name' => null,
