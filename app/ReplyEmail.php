@@ -2,7 +2,6 @@
 
 namespace App;
 
-use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Log;
 
 class ReplyEmail

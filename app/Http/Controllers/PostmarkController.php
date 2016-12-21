@@ -41,7 +41,7 @@ class PostmarkController extends Controller
         }
 
         if ($mail->validate($request->all())) {
-            $this->app->mail->send($mail);
+            $this->app->mailer->send($mail);
             return response('SUCCESS');
         } else {
             return response('ERROR', 422);
@@ -70,7 +70,7 @@ class PostmarkController extends Controller
             $mail->attachData($attachment['data'], $attachment['name']);
         }
 
-        $this->app->mail->send($mail);
+        $this->app->mailer->send($mail);
 
         return response('SUCCESS');
     }

@@ -39,7 +39,7 @@ class SendgridController extends Controller
         }
 
         if ($mail->validate($request->all())) {
-            $this->app->mail->send($mail);
+            $this->app->mailer->send($mail);
             return response('SUCCESS');
         } else {
             return response('ERROR', 406);
@@ -71,7 +71,7 @@ class SendgridController extends Controller
             ]);
         }
 
-        $this->app->mail->send($mail);
+        $this->app->mailer->send($mail);
 
         return response('SUCCESS');
     }

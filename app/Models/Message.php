@@ -6,7 +6,6 @@ use Illuminate\Database\Eloquent\Model;
 
 class Message extends Model
 {
-    const STATUS_REJECTED_REMOTE = 'rejected_remote';
     const STATUS_REJECTED_LOCAL = 'rejected_local';
     const STATUS_SENT = 'sent';
 
