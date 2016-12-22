@@ -18,12 +18,12 @@ class SendgridController extends Controller
     public function inbound(Request $request)
     {
         $mail = new InboundMail('sendgrid');
-        $mail->setSpamScore($request->get('spam_score', 0));
-        $mail->setHtml($request->get('html'));
-        $mail->setText($request->get('text'));
-        $mail->subject($request->get('subject'));
-        $mail->setOriginalTo($request->get('to'));
-        $mail->setOriginalFrom($request->get('from'));
+        $mail->setSpamScore($request->input('spam_score', 0));
+        $mail->setHtml($request->input('html'));
+        $mail->setText($request->input('text'));
+        $mail->subject($request->input('subject'));
+        $mail->setOriginalTo($request->input('to'));
+        $mail->setOriginalFrom($request->input('from'));
 
         foreach ($this->getAttachments($request) as $attachment) {
             $mail->attach($attachment->getRealPath(), [
@@ -32,7 +32,7 @@ class SendgridController extends Controller
             ]);
         }
 
-        foreach (explode('\n', $request->get('headers')) as $header) {
+        foreach (explode('\n', $request->input('headers')) as $header) {
             list($key, $value) = array_map('trim', explode(':', $header, 2));
 
             $mail->addHeader($key, $value);
@@ -40,10 +40,9 @@ class SendgridController extends Controller
 
         if ($mail->validate($request->all())) {
             $this->app->mailer->send($mail);
-            return response('SUCCESS');
-        } else {
-            return response('ERROR', 406);
         }
+
+        return response('SUCCESS');
     }
 
     /**
@@ -54,15 +53,15 @@ class SendgridController extends Controller
      */
     public function outbound(Request $request)
     {
-        if (!ReplyEmail::isAuthorized(json_decode($request->get('envelope'), true)['from'])) {
-            return response('UNAUTHORIZED', 422);
+        if (!ReplyEmail::isAuthorized(json_decode($request->input('envelope'), true)['from'])) {
+            return response('UNAUTHORIZED');
         }
 
         $mail = new OutboundMail('sendgrid');
-        $mail->setHtml($request->get('html'));
-        $mail->setText($request->get('text'));
-        $mail->subject($request->get('subject'));
-        $mail->setReplyEmail(json_decode($request->get('envelope'), true)['from']);
+        $mail->setHtml($request->input('html'));
+        $mail->setText($request->input('text'));
+        $mail->subject($request->input('subject'));
+        $mail->setReplyEmail(json_decode($request->input('envelope'), true)['to']);
 
         foreach ($this->getAttachments($request) as $attachment) {
             $mail->attach($attachment->getRealPath(), [
