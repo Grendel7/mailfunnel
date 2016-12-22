@@ -41,7 +41,7 @@ class PostmarkController extends Controller
             $mail->attachData($attachment['data'], $attachment['name']);
         }
 
-        foreach($request->get('Headers', []) as $header) {
+        foreach($request->input('Headers', []) as $header) {
             $mail->addHeader($header['Name'], $header['Value']);
         }
 

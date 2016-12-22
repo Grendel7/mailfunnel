@@ -71,7 +71,9 @@ class PostmarkControllerTest extends \TestCase
                     'Value' => '0.5',
                 ],
             ],
-            'Attachments' => [],
+            'Attachments' => [
+                ['Name' => 'test.txt', 'Content' => base64_encode('This is a test attachments')],
+            ],
         ];
 
         $this->outboundData['To'] = $this->outboundData['ToFull'][0]['Email'] =
@@ -138,6 +140,44 @@ class PostmarkControllerTest extends \TestCase
         $this->assertEquals(Message::STATUS_REJECTED_LOCAL, $message->status);
         $this->assertEquals(Message::REASON_ADDRESS_BLOCKED, $message->reason);
         $this->assertEquals($address->id, $message->address_id);
+    }
+
+    public function testInboundNoFromName()
+    {
+        $this->inboundData['FromName'] = $this->inboundData['FromFull']['Name'] = '';
+
+        $this->json('POST', '/postmark/inbound', $this->inboundData);
+        $this->assertResponseOk();
+
+        Mail::assertSent(InboundMail::class, function(InboundMail $mail) {
+            $this->assertEquals(
+                [['address' => config('mail.from.address'), 'name' => 'sender@example.com via '.$mail->getOriginalToEmail()]],
+                $mail->getFrom()
+            );
+            $this->assertNotNull($mail->getView());
+            $this->assertNotNull($mail->getTextView());
+            $this->assertNotNull($mail->getTextView());
+
+            return true;
+        });
+
+        $message = Message::all()->last();
+        $this->assertEquals($this->inboundData['From'], $message->from);
+        $this->assertEquals(Message::STATUS_SENT, $message->status);
+    }
+
+    public function testInboundNoToName()
+    {
+        $this->inboundData['ToName'] = $this->inboundData['ToFull'][0]['Name'] = '';
+
+        $this->json('POST', '/postmark/inbound', $this->inboundData);
+        $this->assertResponseOk();
+
+        Mail::assertSent(InboundMail::class);
+
+        $message = Message::all()->last();
+        $this->assertEquals($this->inboundData['To'], $message->address->email);
+        $this->assertEquals(Message::STATUS_SENT, $message->status);
     }
 
     public function testOutbound()
