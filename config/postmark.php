@@ -13,8 +13,8 @@ return [
     |
     */
     'auth' => [
-        //'username' => '',
-        //'password' => '',
+        'username' => 'TestUser',
+        'password' => 'TestPassword',
     ],
 
     /*
