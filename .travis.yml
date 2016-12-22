@@ -7,10 +7,7 @@ php:
 
 before_script:
   - cp .env.travis .env
-  - mysql -e 'create database mailfunnel;'
-  - composer self-update
   - composer install --no-interaction
-  - ./artisan migrate
 
 script:
   - vendor/bin/phpunit --coverage-clover build/logs/clover.xml

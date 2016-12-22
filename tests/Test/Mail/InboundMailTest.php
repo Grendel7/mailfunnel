@@ -6,14 +6,14 @@ use App\Mail\InboundMail;
 use App\Models\Address;
 use App\Models\Message;
 use App\ReplyEmail;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
+use Laravel\Lumen\Testing\DatabaseMigrations;
 use ReflectionClass;
 
-class InboundMailTest extends \PHPUnit_Framework_TestCase
+class InboundMailTest extends \TestCase
 {
-    use ForwardableTest;
+    use ForwardableTest, DatabaseMigrations;
 
     /**
      * @var InboundMail
@@ -31,14 +31,14 @@ class InboundMailTest extends \PHPUnit_Framework_TestCase
 
         Mail::fake();
 
-        DB::beginTransaction();
+//        DB::beginTransaction();
     }
 
     public function tearDown()
     {
         parent::tearDown();
 
-        DB::rollback();
+//        DB::rollback();
     }
 
     public function testBuildSetsReplyToAddress()

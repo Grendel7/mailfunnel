@@ -18,4 +18,14 @@ class Message extends Model
      * @var array
      */
     protected $fillable = ['from', 'subject', 'status', 'reason', 'spam_score', 'address_id'];
+
+    /**
+     * Get the address this message was sent to
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
+     */
+    public function address()
+    {
+        return $this->belongsTo(Address::class);
+    }
 }

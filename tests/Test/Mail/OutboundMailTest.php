@@ -6,7 +6,7 @@ use App\Mail\OutboundMail;
 use App\ReplyEmail;
 use Illuminate\Support\Facades\Mail;
 
-class OutboundMailTest extends \PHPUnit_Framework_TestCase
+class OutboundMailTest extends \TestCase
 {
     use ForwardableTest;
 

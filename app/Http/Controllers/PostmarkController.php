@@ -18,18 +18,23 @@ class PostmarkController extends Controller
     public function inbound(Request $request)
     {
         $mail = new InboundMail('postmark');
-        $mail->setSpamScore(array_first($request->get('Headers', []), function($header) {
+        $mail->setSpamScore(array_first($request->input('Headers', []), function($header) {
             return $header['Name'] == 'X-Spam-Score';
         })['Value']);
-        $mail->setHtml(html_entity_decode($request->get('HtmlBody')));
-        $mail->setText($request->get('TextBody'));
-        $mail->subject($request->get('Subject'));
-        $mail->setOriginalTo($request->get('To'));
+        $mail->setHtml(html_entity_decode($request->input('HtmlBody')));
+        $mail->setText($request->input('TextBody'));
+        $mail->subject($request->input('Subject'));
 
-        if (!empty($request->get('FromName'))) {
-            $mail->setOriginalFrom("{$request->get('FromName')} <{$request->get('From')}>");
+        if (!empty($request->input('ToName'))) {
+            $mail->setOriginalTo("{$request->input('ToName')} <{$request->input('To')}>");
         } else {
-            $mail->setOriginalFrom($request->get('From'));
+            $mail->setOriginalTo($request->input('To'));
+        }
+
+        if (!empty($request->input('FromName'))) {
+            $mail->setOriginalFrom("{$request->input('FromName')} <{$request->input('From')}>");
+        } else {
+            $mail->setOriginalFrom($request->input('From'));
         }
 
         foreach ($this->getAttachments($request) as $attachment) {
@@ -42,10 +47,9 @@ class PostmarkController extends Controller
 
         if ($mail->validate($request->all())) {
             $this->app->mailer->send($mail);
-            return response('SUCCESS');
-        } else {
-            return response('ERROR', 422);
         }
+
+        return response('SUCCESS');
     }
 
     /**
@@ -54,17 +58,17 @@ class PostmarkController extends Controller
      * @param Request $request
      * @return string
      */
-    public function postOutbound(Request $request)
+    public function outbound(Request $request)
     {
-        if (!ReplyEmail::isAuthorized($request->get('FromFull')['Email'])) {
-            return response('UNAUTHORIZED', 422);
+        if (!ReplyEmail::isAuthorized($request->input('FromFull.Email'))) {
+            return response('UNAUTHORIZED');
         }
 
         $mail = new OutboundMail('postmark');
-        $mail->setHtml(html_entity_decode($request->get('HtmlBody')));
-        $mail->setText($request->get('TextBody'));
-        $mail->subject($request->get('Subject'));
-        $mail->setReplyEmail($request->get('ToFull')[0]['Email']);
+        $mail->setHtml(html_entity_decode($request->input('HtmlBody')));
+        $mail->setText($request->input('TextBody'));
+        $mail->subject($request->input('Subject'));
+        $mail->setReplyEmail($request->input('ToFull')[0]['Email']);
 
         foreach ($this->getAttachments($request) as $attachment) {
             $mail->attachData($attachment['data'], $attachment['name']);
@@ -88,6 +92,6 @@ class PostmarkController extends Controller
                 'data' => base64_decode($attachment['Content']),
                 'name' => $attachment['Name'],
             ];
-        }, $request->get('Attachments'));
+        }, $request->input('Attachments'));
     }
 }
