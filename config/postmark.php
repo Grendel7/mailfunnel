@@ -13,8 +13,8 @@ return [
     |
     */
     'auth' => [
-        'username' => 'TestUser',
-        'password' => 'TestPassword',
+        'username' => env('POSTMARK_AUTH_USERNAME', 'TestUser'),
+        'password' => env('POSTMARK_AUTH_PASSWORD', 'TestPassword'),
     ],
 
     /*

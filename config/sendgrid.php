@@ -13,8 +13,8 @@ return [
     |
     */
     'auth' => [
-        'username' => 'TestUser',
-        'password' => 'TestPassword',
+        'username' => env('SENDGRID_AUTH_USERNAME', 'TestUser'),
+        'password' => env('SENDGRID_AUTH_PASSWORD', 'TestPassword'),
     ],
 
     /*
