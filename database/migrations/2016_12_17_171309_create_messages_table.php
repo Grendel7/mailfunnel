@@ -17,7 +17,7 @@ class CreateMessagesTable extends Migration
             $table->increments('id');
             $table->string('from');
             $table->string('subject');
-            $table->string('status');
+            $table->boolean('is_rejected')->default(0);
             $table->string('reason');
             $table->string('spam_score');
             $table->unsignedInteger('address_id');

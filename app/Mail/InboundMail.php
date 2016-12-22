@@ -115,10 +115,7 @@ class InboundMail extends Forwardable
         ]);
 
         if ($address->is_blocked) {
-            $this->saveEmail($address,
-                \App\Models\Message::STATUS_REJECTED_LOCAL,
-                \App\Models\Message::REASON_ADDRESS_BLOCKED
-            );
+            $this->saveEmail($address, true, \App\Models\Message::REASON_ADDRESS_BLOCKED);
 
             return false;
         }
@@ -126,30 +123,28 @@ class InboundMail extends Forwardable
         Log::info('Received message for provider '.$this->provider, $all);
 
         if ($this->spamScore >= config($this->provider.'.spamassassin_score', 5)) {
-            $this->saveEmail($address,
-                Message::STATUS_REJECTED_LOCAL,
-                Message::REASON_SPAM_SCORE
-            );
+            $this->saveEmail($address, true, Message::REASON_SPAM_SCORE);
+
             return false;
         }
 
-        return $this->saveEmail($address, Message::STATUS_SENT);
+        return $this->saveEmail($address);
     }
 
     /**
      * Save a message to the database
      *
      * @param Address $address
-     * @param $status
+     * @param boolean $rejected
      * @param $reason
      * @return bool
      */
-    protected function saveEmail(Address $address, $status, $reason = '')
+    protected function saveEmail(Address $address, $rejected = false, $reason = '')
     {
         $model = new Message([
             'from' => $this->originalFrom,
             'subject' => $this->subject,
-            'status' => $status,
+            'is_rejected' => $rejected,
             'reason' => $reason,
             'spam_score' => $this->spamScore ? $this->spamScore : 0.0,
             'address_id' => $address->id,

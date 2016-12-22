@@ -6,9 +6,6 @@ use Illuminate\Database\Eloquent\Model;
 
 class Message extends Model
 {
-    const STATUS_REJECTED_LOCAL = 'rejected_local';
-    const STATUS_SENT = 'sent';
-
     const REASON_ADDRESS_BLOCKED = 'address_blocked';
     const REASON_SPAM_SCORE = 'spam_score';
 
@@ -17,7 +14,7 @@ class Message extends Model
      *
      * @var array
      */
-    protected $fillable = ['from', 'subject', 'status', 'reason', 'spam_score', 'address_id'];
+    protected $fillable = ['from', 'subject', 'is_rejected', 'reason', 'spam_score', 'address_id'];
 
     /**
      * Get the address this message was sent to
@@ -27,5 +24,10 @@ class Message extends Model
     public function address()
     {
         return $this->belongsTo(Address::class);
+    }
+
+    public function getIsRejectedAttribute($value)
+    {
+        return (boolean) $value;
     }
 }

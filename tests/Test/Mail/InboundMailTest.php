@@ -122,7 +122,7 @@ class InboundMailTest extends \TestCase
         $this->assertTrue($this->inboundMail->validate([]));
 
         $message = Message::all()->last();
-        $this->assertEquals(Message::STATUS_SENT, $message->status);
+        $this->assertFalse($message->is_rejected);
         $this->assertEquals(null, $message->reason);
     }
 
@@ -145,7 +145,7 @@ class InboundMailTest extends \TestCase
         $this->assertFalse($this->inboundMail->validate([]));
         $message = Message::all()->last();
         $this->assertEquals($address->id, $message->address_id);
-        $this->assertEquals(Message::STATUS_REJECTED_LOCAL, $message->status);
+        $this->assertTrue($message->is_rejected);
         $this->assertEquals(Message::REASON_ADDRESS_BLOCKED, $message->reason);
     }
 
@@ -156,7 +156,7 @@ class InboundMailTest extends \TestCase
         $this->assertFalse($this->inboundMail->validate([]));
 
         $message = Message::all()->last();
-        $this->assertEquals(Message::STATUS_REJECTED_LOCAL, $message->status);
+        $this->assertTrue($message->is_rejected);
         $this->assertEquals(Message::REASON_SPAM_SCORE, $message->reason);
     }
 

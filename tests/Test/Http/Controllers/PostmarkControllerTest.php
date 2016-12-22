@@ -108,7 +108,7 @@ class PostmarkControllerTest extends \TestCase
         $this->assertEquals($this->inboundData['Subject'], $message->subject);
         $this->assertEquals($this->inboundData['To'], $message->address->email);
         $this->assertEquals("{$this->inboundData['FromName']} <{$this->inboundData['From']}>", $message->from);
-        $this->assertEquals(Message::STATUS_SENT, $message->status);
+        $this->assertFalse($message->is_rejected);
         $this->assertEquals('0.5', $message->spam_score);
     }
 
@@ -126,7 +126,7 @@ class PostmarkControllerTest extends \TestCase
         Mail::assertNotSent(InboundMail::class);
 
         $message = Message::all()->last();
-        $this->assertEquals(Message::STATUS_REJECTED_LOCAL, $message->status);
+        $this->assertTrue($message->is_rejected);
         $this->assertEquals(Message::REASON_SPAM_SCORE, $message->reason);
         $this->assertEquals('10', $message->spam_score);
     }
@@ -143,7 +143,7 @@ class PostmarkControllerTest extends \TestCase
         Mail::assertNotSent(InboundMail::class);
 
         $message = Message::all()->last();
-        $this->assertEquals(Message::STATUS_REJECTED_LOCAL, $message->status);
+        $this->assertTrue($message->is_rejected);
         $this->assertEquals(Message::REASON_ADDRESS_BLOCKED, $message->reason);
         $this->assertEquals($address->id, $message->address_id);
     }
@@ -169,7 +169,7 @@ class PostmarkControllerTest extends \TestCase
 
         $message = Message::all()->last();
         $this->assertEquals($this->inboundData['From'], $message->from);
-        $this->assertEquals(Message::STATUS_SENT, $message->status);
+        $this->assertFalse($message->is_rejected);
     }
 
     public function testInboundNoToName()
@@ -183,7 +183,7 @@ class PostmarkControllerTest extends \TestCase
 
         $message = Message::all()->last();
         $this->assertEquals($this->inboundData['To'], $message->address->email);
-        $this->assertEquals(Message::STATUS_SENT, $message->status);
+        $this->assertFalse($message->is_rejected);
     }
 
     public function testInboundBadAuth()
