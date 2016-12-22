@@ -21,12 +21,12 @@ class MailgunController extends Controller
         $headers = json_decode($request->get('message-headers', '[]'));
 
         $mail = new InboundMail('mailgun');
-        $mail->setSpamScore(array_first($headers, function($header) { return $header[0] == 'X-Mailgun-Sscore'; }));
+        $mail->setSpamScore(array_first($headers, function($header) { return $header[0] == 'X-Mailgun-Sscore'; })[1]);
         $mail->setHtml($request->get('body-html'));
         $mail->setText($request->get('body-plain'));
         $mail->subject($request->get('subject'));
-        $mail->setOriginalTo($request->get('to'));
-        $mail->setOriginalFrom($request->get('from'));
+        $mail->setOriginalTo($request->get('To'));
+        $mail->setOriginalFrom($request->get('From'));
 
         foreach ($this->getAttachments($request) as $attachment) {
             $mail->attach($attachment->getRealPath(), [
@@ -43,7 +43,7 @@ class MailgunController extends Controller
             $this->app->mailer->send($mail);
             return response('SUCCESS');
         } else {
-            return response('ERROR', 422);
+            return response('ERROR', 406);
         }
     }
 

@@ -18,8 +18,8 @@ $app->get('/', function () use ($app) {
 $app->get('reply', 'ReplyController@create');
 $app->post('reply', 'ReplyController@store');
 
-$app->post('mailgun/inbound', ['middleware' => 'mailgun', 'uses' => 'MailgunController@inbound']);
-$app->post('mailgun/outbound', ['middleware' => 'mailgun', 'uses' => 'MailgunController@outbound']);
+$app->post('mailgun/inbound', ['middleware' => 'mailgun:inbound', 'uses' => 'MailgunController@inbound']);
+$app->post('mailgun/outbound', ['middleware' => 'mailgun:outbound', 'uses' => 'MailgunController@outbound']);
 
 $app->post('postmark/inbound', ['middleware' => 'basic_auth:postmark', 'uses' => 'PostmarkController@inbound']);
 $app->post('postmark/outbound', ['middleware' => 'basic_auth:postmark', 'uses' => 'PostmarkController@outbound']);

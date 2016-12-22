@@ -11,7 +11,7 @@ return [
         | The API key of your inbound domain is used to sign inbound requests.
         |
         */
-        'inbound' => env('MAILGUN_WEBHOOK_KEY_INBOUND', 'key-'),
+        'inbound' => env('MAILGUN_WEBHOOK_KEY_INBOUND', 'key-your-inbound-token-here'),
 
         /*
         |--------------------------------------------------------------------------
@@ -21,7 +21,7 @@ return [
         | The API key of your outbound domain is used to sign inbound requests.
         |
         */
-        'outbound' => env('MAILGUN_WEBHOOK_KEY_OUTBOUND', 'key-'),
+        'outbound' => env('MAILGUN_WEBHOOK_KEY_OUTBOUND', 'key-your-outbound-token-here'),
     ],
 
     /*
