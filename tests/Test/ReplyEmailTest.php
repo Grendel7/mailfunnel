@@ -67,4 +67,12 @@ class ReplyEmailTest extends \TestCase
     {
         $this->assertEquals(['name' => null, 'email' => 'test@example.com'], $this->replyEmail->extractAddress('test@example.com'));
     }
+
+    public function testExtractAddressSpecialChars()
+    {
+        $this->assertEquals(
+            ['name' => 'Special Name', 'email' => '!#$%&\'*+-/=?^_`{|}~name@example.com'],
+            $this->replyEmail->extractAddress('Special Name <!#$%&\'*+-/=?^_`{|}~name@example.com>')
+        );
+    }
 }

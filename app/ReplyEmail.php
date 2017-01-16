@@ -40,7 +40,7 @@ class ReplyEmail
         }
 
         $matches = [];
-        preg_match('/(.+)\s+<([\w@\.]+)>/', $address, $matches);
+        preg_match('/(.+)\s+<(.+)>/', $address, $matches);
 
         return [
             'name' => $matches[1],
