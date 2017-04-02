@@ -15,10 +15,10 @@ trait ForwardableTest
 
         Mail::send($forwardable);
 
-        Mail::assertSent(Forwardable::class, function(Forwardable $mail) {
-            $this->assertEquals('email.html', $mail->getView());
-            $this->assertNull($mail->getTextView());
-            $this->assertArrayHasKey('html', $mail->getViewData());
+        $this->assertSent(Forwardable::class, function(Forwardable $mail) {
+            $this->assertEquals('email.html', $mail->view);
+            $this->assertNull($mail->textView);
+            $this->assertArrayHasKey('html', $mail->viewData);
 
             return true;
         });
@@ -31,9 +31,11 @@ trait ForwardableTest
 
         Mail::send($forwardable);
 
-        Mail::assertSent(Forwardable::class, function(Forwardable $mail) {
-            $this->assertNull($mail->getView());
-//            $this->assertNull($mail->getTextView());
+        $this->assertSent(Forwardable::class, function(Forwardable $mail) {
+            $mail->build();
+
+            $this->assertNull($mail->view);
+//            $this->assertNull($mail->textView);
 
             return true;
         });
@@ -46,10 +48,10 @@ trait ForwardableTest
 
         Mail::send($forwardable);
 
-        Mail::assertSent(Forwardable::class, function(Forwardable $mail) {
-            $this->assertNull($mail->getView());
-            $this->assertEquals('email.text', $mail->getTextView());
-            $this->assertArrayHasKey('text', $mail->getViewData());
+        $this->assertSent(Forwardable::class, function(Forwardable $mail) {
+            $this->assertNull($mail->view);
+            $this->assertEquals('email.text', $mail->textView);
+            $this->assertArrayHasKey('text', $mail->viewData);
 
             return true;
         });
@@ -62,9 +64,9 @@ trait ForwardableTest
 
         Mail::send($forwardable);
 
-        Mail::assertSent(Forwardable::class, function(Forwardable $mail) {
-            $this->assertNull($mail->getView());
-//            $this->assertNull($mail->getTextView());
+        $this->assertSent(Forwardable::class, function(Forwardable $mail) {
+            $this->assertNull($mail->view);
+//            $this->assertNull($mail->textView);
 
             return true;
         });
@@ -78,11 +80,11 @@ trait ForwardableTest
 
         Mail::send($forwardable);
 
-        Mail::assertSent(Forwardable::class, function(Forwardable $mail) {
-            $this->assertEquals('email.html', $mail->getView());
-            $this->assertEquals('email.text', $mail->getTextView());
-            $this->assertArrayHasKey('html', $mail->getViewData());
-            $this->assertArrayHasKey('text', $mail->getViewData());
+        $this->assertSent(Forwardable::class, function(Forwardable $mail) {
+            $this->assertEquals('email.html', $mail->view);
+            $this->assertEquals('email.text', $mail->textView);
+            $this->assertArrayHasKey('html', $mail->viewData);
+            $this->assertArrayHasKey('text', $mail->viewData);
 
             return true;
         });

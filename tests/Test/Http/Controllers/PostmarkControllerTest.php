@@ -92,14 +92,14 @@ class PostmarkControllerTest extends \TestCase
         $this->json('POST', '/postmark/inbound', $this->inboundData, $this->authHeaders);
         $this->assertResponseOk();
 
-        Mail::assertSent(InboundMail::class, function(InboundMail $mail) {
+        $this->assertSent(InboundMail::class, function (InboundMail $mail) {
             $this->assertEquals(
                 [['address' => config('mail.from.address'), 'name' => 'Test Sender \'sender@example.com\' via '.$mail->getOriginalToEmail()]],
-                $mail->getFrom()
+                $mail->from
             );
-            $this->assertNotNull($mail->getView());
-            $this->assertNotNull($mail->getTextView());
-            $this->assertNotNull($mail->getTextView());
+            $this->assertNotNull($mail->view);
+            $this->assertNotNull($mail->textView);
+            $this->assertNotNull($mail->textView);
 
             return true;
         });
@@ -155,14 +155,14 @@ class PostmarkControllerTest extends \TestCase
         $this->json('POST', '/postmark/inbound', $this->inboundData, $this->authHeaders);
         $this->assertResponseOk();
 
-        Mail::assertSent(InboundMail::class, function(InboundMail $mail) {
+        $this->assertSent(InboundMail::class, function (InboundMail $mail) {
             $this->assertEquals(
                 [['address' => config('mail.from.address'), 'name' => 'sender@example.com via '.$mail->getOriginalToEmail()]],
-                $mail->getFrom()
+                $mail->from
             );
-            $this->assertNotNull($mail->getView());
-            $this->assertNotNull($mail->getTextView());
-            $this->assertNotNull($mail->getTextView());
+            $this->assertNotNull($mail->view);
+            $this->assertNotNull($mail->textView);
+            $this->assertNotNull($mail->textView);
 
             return true;
         });
@@ -209,9 +209,9 @@ class PostmarkControllerTest extends \TestCase
         $this->json('POST', '/postmark/outbound', $this->outboundData, $this->authHeaders);
         $this->assertResponseOk();
 
-        Mail::assertSent(OutboundMail::class, function(OutboundMail $mail) {
-            $this->assertEquals([['address' => 'recipient@example.com', 'name' => null]], $mail->getFrom());
-            $this->assertEquals([['address' => 'sender@example.com', 'name' => null]], $mail->getTo());
+        $this->assertSent(OutboundMail::class, function (OutboundMail $mail) {
+            $this->assertEquals([['address' => 'recipient@example.com', 'name' => null]], $mail->from);
+            $this->assertEquals([['address' => 'sender@example.com', 'name' => null]], $mail->to);
 
             return true;
         });

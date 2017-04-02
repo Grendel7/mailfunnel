@@ -45,7 +45,7 @@ class InboundMailTest extends \TestCase
     {
         Mail::send($this->inboundMail);
 
-        Mail::assertSent(InboundMail::class, function(InboundMail $mail) {
+        $this->assertSent(InboundMail::class, function (InboundMail $mail) {
             $expected = [
                 'address' => ReplyEmail::generate('Test Recipient <recipient@example.com>', 'Test Sender <sender@example.com>'),
                 'name' => null,
@@ -65,13 +65,13 @@ class InboundMailTest extends \TestCase
     {
         Mail::send($this->inboundMail);
 
-        Mail::assertSent(InboundMail::class, function (InboundMail $mail) {
+        $this->assertSent(InboundMail::class, function (InboundMail $mail) {
             $expected = [
                 'address' => config('mailfunnel.recipient.email'),
                 'name' => config('mailfunnel.recipient.name'),
             ];
 
-            $this->assertEquals([$expected], $mail->getTo());
+            $this->assertEquals([$expected], $mail->to);
 
             return true;
         });
@@ -81,13 +81,13 @@ class InboundMailTest extends \TestCase
     {
         Mail::send($this->inboundMail);
 
-        Mail::assertSent(InboundMail::class, function (InboundMail $mail) {
+        $this->assertSent(InboundMail::class, function (InboundMail $mail) {
             $expected = [
                 'address' => config('mail.from.address'),
                 'name' => $mail->getSafeOriginalFrom() . ' via ' . $mail->getOriginalToEmail(),
             ];
 
-            $this->assertEquals([$expected], $mail->getFrom());
+            $this->assertEquals([$expected], $mail->from);
 
             return true;
         });

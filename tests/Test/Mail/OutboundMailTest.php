@@ -38,9 +38,9 @@ class OutboundMailTest extends \TestCase
 
         Mail::send($this->outboundMail);
 
-        Mail::assertSent(OutboundMail::class, function(OutboundMail $mail) {
-            $this->assertEquals([['address' => 'sender@example.com', 'name' => 'Test Sender']], $mail->getFrom());
-            $this->assertEquals([['address' => 'receiver@example.com', 'name' => 'Test Receiver']], $mail->getTo());
+        $this->assertSent(OutboundMail::class, function (OutboundMail $mail) {
+            $this->assertEquals([['address' => 'sender@example.com', 'name' => 'Test Sender']], $mail->from);
+            $this->assertEquals([['address' => 'receiver@example.com', 'name' => 'Test Receiver']], $mail->to);
 
             return true;
         });
