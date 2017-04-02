@@ -28,6 +28,7 @@ $app->withFacades();
 $app->withEloquent();
 
 $app->configure('app');
+$app->configure('cache');
 $app->configure('database');
 $app->configure('mail');
 $app->configure('mailfunnel');
