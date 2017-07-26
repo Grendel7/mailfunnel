@@ -24,12 +24,7 @@ class PostmarkController extends Controller
         $mail->setHtml(html_entity_decode($request->input('HtmlBody')));
         $mail->setText($request->input('TextBody'));
         $mail->subject($request->input('Subject'));
-
-        if (!empty($request->input('ToName'))) {
-            $mail->setOriginalTo("{$request->input('ToName')} <{$request->input('To')}>");
-        } else {
-            $mail->setOriginalTo($request->input('To'));
-        }
+        $mail->setOriginalTo($request->input('OriginalRecipient'));
 
         if (!empty($request->input('FromName'))) {
             $mail->setOriginalFrom("{$request->input('FromName')} <{$request->input('From')}>");
