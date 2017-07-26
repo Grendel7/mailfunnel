@@ -25,7 +25,7 @@ class MailgunController extends Controller
         $mail->setHtml($request->get('body-html'));
         $mail->setText($request->get('body-plain'));
         $mail->subject($request->get('subject'));
-        $mail->setOriginalTo($request->get('To'));
+        $mail->setOriginalTo($request->get('recipient'));
         $mail->setOriginalFrom($request->get('From'));
 
         foreach ($this->getAttachments($request) as $attachment) {
