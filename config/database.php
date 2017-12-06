@@ -1,5 +1,13 @@
 <?php
 
+if (!env('DB_DATABASE') && env('DATABASE_URL')) {
+    $url = parse_url(env('DATABASE_URL'));
+}
+
+if (env('REDIS_URL')) {
+    $redisUrl = parse_url(env('REDIS_URL'));
+}
+
 return [
 
     /*
@@ -59,11 +67,11 @@ return [
 
         'mysql' => [
             'driver'    => 'mysql',
-            'host'      => env('DB_HOST', 'localhost'),
-            'port'      => env('DB_PORT', 3306),
-            'database'  => env('DB_DATABASE', 'mailfunnel'),
-            'username'  => env('DB_USERNAME', 'root'),
-            'password'  => env('DB_PASSWORD', ''),
+            'host' => env('DB_HOST', isset($url) ? $url['host'] : '127.0.0.1'),
+            'port' => env('DB_PORT', isset($url) ? $url['port'] : 3306),
+            'database' => env('DB_DATABASE', isset($url) ? ltrim($url['path'], '/') : 'forge'),
+            'username' => env('DB_USERNAME', isset($url) ? $url['user'] : 'forge'),
+            'password' => env('DB_PASSWORD', isset($url) ? $url['pass'] : ''),
             'charset'   => env('DB_CHARSET', 'utf8'),
             'collation' => env('DB_COLLATION', 'utf8_unicode_ci'),
             'prefix'    => env('DB_PREFIX', ''),
@@ -73,11 +81,11 @@ return [
 
         'pgsql' => [
             'driver'   => 'pgsql',
-            'host'     => env('DB_HOST', 'localhost'),
-            'port'     => env('DB_PORT', 5432),
-            'database' => env('DB_DATABASE', 'forge'),
-            'username' => env('DB_USERNAME', 'forge'),
-            'password' => env('DB_PASSWORD', ''),
+            'host' => env('DB_HOST', isset($url) ? $url['host'] : '127.0.0.1'),
+            'port' => env('DB_PORT', isset($url) ? $url['port'] : '5432'),
+            'database' => env('DB_DATABASE', isset($url) ? ltrim($url['path'], '/') : 'forge'),
+            'username' => env('DB_USERNAME', isset($url) ? $url['user'] : 'forge'),
+            'password' => env('DB_PASSWORD', isset($url) ? $url['pass'] : ''),
             'charset'  => env('DB_CHARSET', 'utf8'),
             'prefix'   => env('DB_PREFIX', ''),
             'schema'   => env('DB_SCHEMA', 'public'),
@@ -85,10 +93,10 @@ return [
 
         'sqlsrv' => [
             'driver'   => 'sqlsrv',
-            'host'     => env('DB_HOST', 'localhost'),
-            'database' => env('DB_DATABASE', 'forge'),
-            'username' => env('DB_USERNAME', 'forge'),
-            'password' => env('DB_PASSWORD', ''),
+            'host' => env('DB_HOST', isset($url) ? $url['host'] : '127.0.0.1'),
+            'database' => env('DB_DATABASE', isset($url) ? ltrim($url['path'], '/') : 'forge'),
+            'username' => env('DB_USERNAME', isset($url) ? $url['user'] : 'forge'),
+            'password' => env('DB_PASSWORD', isset($url) ? $url['pass'] : ''),
             'charset'  => env('DB_CHARSET', 'utf8'),
             'prefix'   => env('DB_PREFIX', ''),
         ],
@@ -124,10 +132,10 @@ return [
         'cluster' => env('REDIS_CLUSTER', false),
 
         'default' => [
-            'host'     => env('REDIS_HOST', '127.0.0.1'),
-            'port'     => env('REDIS_PORT', 6379),
+            'host' => env('REDIS_HOST', isset($redisUrl) ? $redisUrl['host'] : '127.0.0.1'),
+            'password' => env('REDIS_PASSWORD', isset($redisUrl) ? $redisUrl['pass'] : null),
+            'port' => env('REDIS_PORT', isset($redisUrl) ? $redisUrl['port'] : 6379),
             'database' => env('REDIS_DATABASE', 0),
-            'password' => env('REDIS_PASSWORD', null),
         ],
 
     ],
