@@ -19,7 +19,8 @@
         "mockery/mockery": "~0.9",
         "satooshi/php-coveralls": "~1.0",
         "laravel/browser-kit-testing": "^1.0",
-        "psy/psysh": "~0.8"
+        "psy/psysh": "~0.8",
+        "phpdocumentor/reflection-docblock": "~3.0"
     },
     "autoload": {
         "psr-4": {
