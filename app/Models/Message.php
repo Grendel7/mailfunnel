@@ -17,6 +17,13 @@ class Message extends Model
     protected $fillable = ['from', 'subject', 'is_rejected', 'reason', 'spam_score', 'address_id'];
 
     /**
+     * All of the relationships to be touched.
+     *
+     * @var array
+     */
+    protected $touches = ['address'];
+
+    /**
      * Get the address this message was sent to
      *
      * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
@@ -26,12 +33,6 @@ class Message extends Model
         return $this->belongsTo(Address::class);
     }
 
-    /**
-     * All of the relationships to be touched.
-     *
-     * @var array
-     */
-    protected $touches = ['address'];
 
     public function getIsRejectedAttribute($value)
     {
