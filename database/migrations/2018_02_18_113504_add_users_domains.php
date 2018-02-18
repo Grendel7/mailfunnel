@@ -14,6 +14,10 @@ class AddUsersDomains extends Migration
      */
     public function up()
     {
+        if (!env('MAIL_RECIPIENT_NAME') || !env('MAIL_RECIPIENT_EMAIL')) {
+            return;
+        }
+
         DB::transaction(function () {
             DB::table('users')->insert([
                 'id' => 1,
