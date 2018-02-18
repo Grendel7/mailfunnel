@@ -5,9 +5,11 @@ services:
     image: mysql:5.7
     environment:
       - MYSQL_ROOT_PASSWORD=root
-      - MYSQL_USER=admin
-      - MYSQL_PASSWORD=admin
+      - MYSQL_USER=mailfunnel
+      - MYSQL_PASSWORD=mailfunnel
       - MYSQL_DATABASE=mailfunnel
+    volumes:
+      - ./docker/db:/docker-entrypoint-initdb.d
 
   web:
     build: .
@@ -15,9 +17,6 @@ services:
     environment:
       - DB_CONNECTION=mysql
       - DB_HOST=db
-      - DB_DATABASE=mailfunnel
-      - DB_USERNAME=admin
-      - DB_PASSWORD=admin
     ports:
       - 8000:8000
     links:
