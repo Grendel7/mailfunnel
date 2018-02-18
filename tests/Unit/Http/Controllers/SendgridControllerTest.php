@@ -5,26 +5,36 @@ namespace Test\Http\Controllers;
 use App\Mail\InboundMail;
 use App\Mail\OutboundMail;
 use App\Models\Address;
+use App\Models\Domain;
 use App\Models\Message;
+use App\Models\User;
 use App\ReplyEmail;
 use Faker\Provider\Uuid;
+use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Mail;
-use Illuminate\Validation\Rules\In;
-use Laravel\Lumen\Testing\DatabaseMigrations;
+use Tests\TestCase;
 
-class SendgridControllerTest extends \TestCase
+class SendgridControllerTest extends TestCase
 {
-    use DatabaseMigrations;
+    use RefreshDatabase;
 
     protected $inboundData;
     protected $outboundData;
     protected $authHeaders;
+
+    protected $user;
 
     public function setUp()
     {
         parent::setUp();
 
         Mail::fake();
+
+        $this->user = factory(User::class)->create();
+        Domain::create([
+            'domain' => 'example.com',
+            'user_id' => $this->user->id,
+        ]);
 
         $this->authHeaders = [
             'PHP_AUTH_USER' => 'TestUser',
@@ -60,10 +70,11 @@ class SendgridControllerTest extends \TestCase
 
     public function testInbound()
     {
-        $this->json('POST', '/sendgrid/inbound', $this->inboundData, $this->authHeaders);
-        $this->assertResponseOk();
+        $response = $this->json('POST', '/sendgrid/inbound', $this->inboundData, $this->authHeaders);
+        $response->assertStatus(200);
 
-        $this->assertSent(InboundMail::class, function (InboundMail $mail) {
+        Mail::assertSent(InboundMail::class, function (InboundMail $mail) {
+            $mail->build();
             $this->assertEquals(
                 [['address' => config('mail.from.address'), 'name' => 'Test Sender \'sender@example.com\' via '.$mail->getOriginalToEmail()]],
                 $mail->from
@@ -88,8 +99,8 @@ class SendgridControllerTest extends \TestCase
     {
         $this->inboundData['spam_score'] = 10;
 
-        $this->json('POST', '/sendgrid/inbound', $this->inboundData, $this->authHeaders);
-        $this->assertResponseOk();
+        $response = $this->json('POST', '/sendgrid/inbound', $this->inboundData, $this->authHeaders);
+        $response->assertStatus(200);
 
         Mail::assertNotSent(InboundMail::class);
 
@@ -104,10 +115,11 @@ class SendgridControllerTest extends \TestCase
         $envelope = json_decode($this->inboundData['envelope'], true);
         $address = new Address(['email' => $envelope['to']]);
         $address->is_blocked = true;
-        $address->saveOrFail();
+        $address->domain_id = Domain::where('domain', 'example.com')->first()->id;
+        $address->save();
 
-        $this->json('POST', '/sendgrid/inbound', $this->inboundData, $this->authHeaders);
-        $this->assertResponseOk();
+        $response = $this->json('POST', '/sendgrid/inbound', $this->inboundData, $this->authHeaders);
+        $response->assertStatus(200);
 
         Mail::assertNotSent(InboundMail::class);
 
@@ -122,10 +134,11 @@ class SendgridControllerTest extends \TestCase
         $envelope = json_decode($this->inboundData['envelope'], true);
         $this->inboundData['from'] = $envelope['from'];
 
-        $this->json('POST', '/sendgrid/inbound', $this->inboundData, $this->authHeaders);
-        $this->assertResponseOk();
+        $response = $this->json('POST', '/sendgrid/inbound', $this->inboundData, $this->authHeaders);
+        $response->assertStatus(200);
 
-        $this->assertSent(InboundMail::class, function (InboundMail $mail) {
+        Mail::assertSent(InboundMail::class, function (InboundMail $mail) {
+            $mail->build();
             $this->assertEquals(
                 [['address' => config('mail.from.address'), 'name' => 'sender@example.com via '.$mail->getOriginalToEmail()]],
                 $mail->from
@@ -147,8 +160,8 @@ class SendgridControllerTest extends \TestCase
         $envelope = json_decode($this->inboundData['envelope'], true);
         $this->inboundData['to'] = $envelope['to'];
 
-        $this->json('POST', '/sendgrid/inbound', $this->inboundData, $this->authHeaders);
-        $this->assertResponseOk();
+        $response = $this->json('POST', '/sendgrid/inbound', $this->inboundData, $this->authHeaders);
+        $response->assertStatus(200);
 
         Mail::assertSent(InboundMail::class);
 
@@ -161,26 +174,27 @@ class SendgridControllerTest extends \TestCase
     {
         $this->authHeaders['PHP_AUTH_PW'] = 'BadPassword';
 
-        $this->json('POST', '/sendgrid/inbound', $this->inboundData, $this->authHeaders);
-        $this->assertResponseStatus(403);
+        $response = $this->json('POST', '/sendgrid/inbound', $this->inboundData, $this->authHeaders);
+        $response->assertStatus(403);
 
         Mail::assertNotSent(InboundMail::class);
     }
 
     public function testInboundNoAuth()
     {
-        $this->json('POST', '/sendgrid/inbound', $this->inboundData);
-        $this->assertResponseStatus(403);
+        $response = $this->json('POST', '/sendgrid/inbound', $this->inboundData);
+        $response->assertStatus(403);
 
         Mail::assertNotSent(InboundMail::class);
     }
 
     public function testOutbound()
     {
-        $this->json('POST', '/sendgrid/outbound', $this->outboundData, $this->authHeaders);
-        $this->assertResponseOk();
+        $response = $this->json('POST', '/sendgrid/outbound', $this->outboundData, $this->authHeaders);
+        $response->assertStatus(200);
 
-        $this->assertSent(OutboundMail::class, function (OutboundMail $mail) {
+        Mail::assertSent(OutboundMail::class, function (OutboundMail $mail) {
+            $mail->build();
             $this->assertEquals([['address' => 'recipient@example.com', 'name' => null]], $mail->from);
             $this->assertEquals([['address' => 'sender@example.com', 'name' => null]], $mail->to);
 
@@ -193,8 +207,8 @@ class SendgridControllerTest extends \TestCase
         $this->outboundData['from'] = 'hacker@example.com';
         $this->outboundData['envelope'] = json_encode(['to' => $this->outboundData['to'], 'from' => $this->outboundData['from']]);
 
-        $this->json('POST', '/sendgrid/outbound', $this->outboundData, $this->authHeaders);
-        $this->assertResponseOk();
+        $response = $this->json('POST', '/sendgrid/outbound', $this->outboundData, $this->authHeaders);
+        $response->assertStatus(200);
 
         Mail::assertNotSent(OutboundMail::class);
     }
@@ -203,16 +217,16 @@ class SendgridControllerTest extends \TestCase
     {
         $this->authHeaders['PHP_AUTH_PW'] = 'BadPassword';
 
-        $this->json('POST', '/sendgrid/outbound', $this->outboundData, $this->authHeaders);
-        $this->assertResponseStatus(403);
+        $response = $this->json('POST', '/sendgrid/outbound', $this->outboundData, $this->authHeaders);
+        $response->assertStatus(403);
 
         Mail::assertNotSent(InboundMail::class);
     }
 
     public function testOutboundNoAuth()
     {
-        $this->json('POST', '/sendgrid/outbound', $this->outboundData);
-        $this->assertResponseStatus(403);
+        $response = $this->json('POST', '/sendgrid/outbound', $this->outboundData);
+        $response->assertStatus(403);
 
         Mail::assertNotSent(InboundMail::class);
     }

@@ -73,7 +73,7 @@ class RouteServiceProvider extends ServiceProvider
 
     protected function mapMailerRoutes()
     {
-        Route::namespace($this->namespace.'/Mailer')
+        Route::namespace($this->namespace.'\Mailer')
             ->group(base_path('routes/mailer.php'));
     }
 }

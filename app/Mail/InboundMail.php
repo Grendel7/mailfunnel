@@ -3,6 +3,7 @@
 namespace App\Mail;
 
 use App\Models\Address;
+use App\Models\Domain;
 use App\Models\Message;
 use App\ReplyEmail;
 use Illuminate\Mail\Mailable;
@@ -96,9 +97,11 @@ class InboundMail extends Forwardable
      */
     public function build()
     {
+        $domain = Domain::where('domain', explode('@', $this->getOriginalToEmail())[1])->first();
+
         return parent::build()
             ->replyTo(ReplyEmail::generate($this->originalTo, $this->originalFrom))
-            ->to(config('mailfunnel.recipient.email'), config('mailfunnel.recipient.name'))
+            ->to($domain->user->email, $domain->user->name)
             ->from(config('mail.from.address'), $this->getSafeOriginalFrom() . " via " . $this->getOriginalToEmail());
     }
 
@@ -110,9 +113,19 @@ class InboundMail extends Forwardable
      */
     public function validate($all)
     {
-        $address = Address::firstOrCreate([
-            'email' => $this->getOriginalToEmail(),
-        ]);
+        $domain = Domain::where('domain', explode('@', $this->getOriginalToEmail())[1])->first();
+
+        if (!$domain) {
+            Log::warning('The domain name is not registered!', [
+                'domain' => $domain,
+                'originalToEmail' => $this->getOriginalToEmail(),
+                'data' => $all,
+            ]);
+
+            return false;
+        }
+
+        $address = Address::firstOrCreate(['email' => $this->getOriginalToEmail()], ['domain_id' => $domain->id]);
 
         if ($address->is_blocked) {
             $this->saveEmail($address, true, \App\Models\Message::REASON_ADDRESS_BLOCKED);

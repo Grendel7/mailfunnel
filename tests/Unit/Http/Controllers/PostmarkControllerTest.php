@@ -5,25 +5,36 @@ namespace Test\Http\Controllers;
 use App\Mail\InboundMail;
 use App\Mail\OutboundMail;
 use App\Models\Address;
+use App\Models\Domain;
 use App\Models\Message;
+use App\Models\User;
 use App\ReplyEmail;
 use Faker\Provider\Uuid;
+use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Mail;
-use Laravel\Lumen\Testing\DatabaseMigrations;
+use Tests\TestCase;
 
-class PostmarkControllerTest extends \TestCase
+class PostmarkControllerTest extends TestCase
 {
-    use DatabaseMigrations;
+    use RefreshDatabase;
 
     protected $inboundData;
     protected $outboundData;
     protected $authHeaders;
+
+    public $user;
 
     public function setUp()
     {
         parent::setUp();
 
         Mail::fake();
+
+        $this->user = factory(User::class)->create();
+        Domain::create([
+            'domain' => 'example.com',
+            'user_id' => $this->user->id,
+        ]);
 
         $this->authHeaders = [
             'PHP_AUTH_USER' => 'TestUser',
@@ -60,22 +71,10 @@ class PostmarkControllerTest extends \TestCase
             'StrippedTextReply' => '',
             'Tag' => '',
             'Headers' => [
-                [
-                    'Name' => 'Received',
-                    'Value' => 'by testserver.example (Testmailer); '.date('r'),
-                ],
-                [
-                    'Name' => 'X-Spam-Checker-Version',
-                    'Value' => 'SpamAssassin',
-                ],
-                [
-                    'Name' => 'X-Spam-Status',
-                    'Value' => 'No',
-                ],
-                [
-                    'Name' => 'X-Spam-Score',
-                    'Value' => '0.5',
-                ],
+                ['Name' => 'Received', 'Value' => 'by testserver.example (Testmailer); '.date('r'),],
+                ['Name' => 'X-Spam-Checker-Version', 'Value' => 'SpamAssassin',],
+                ['Name' => 'X-Spam-Status', 'Value' => 'No',],
+                ['Name' => 'X-Spam-Score', 'Value' => '0.5',],
             ],
             'Attachments' => [
                 ['Name' => 'test.txt', 'Content' => base64_encode('This is a test attachments')],
@@ -89,12 +88,16 @@ class PostmarkControllerTest extends \TestCase
 
     public function testInbound()
     {
-        $this->json('POST', '/postmark/inbound', $this->inboundData, $this->authHeaders);
-        $this->assertResponseOk();
+        $response = $this->json('POST', '/postmark/inbound', $this->inboundData, $this->authHeaders);
+        $response->assertStatus(200);
 
-        $this->assertSent(InboundMail::class, function (InboundMail $mail) {
+        Mail::assertSent(InboundMail::class, function (InboundMail $mail) {
+            $mail->build();
             $this->assertEquals(
-                [['address' => config('mail.from.address'), 'name' => 'Test Sender \'sender@example.com\' via '.$mail->getOriginalToEmail()]],
+                [[
+                    'address' => config('mail.from.address'),
+                    'name' => 'Test Sender \'sender@example.com\' via '.$mail->getOriginalToEmail()
+                ]],
                 $mail->from
             );
             $this->assertNotNull($mail->view);
@@ -120,8 +123,8 @@ class PostmarkControllerTest extends \TestCase
             }
         });
 
-        $this->json('POST', '/postmark/inbound', $this->inboundData, $this->authHeaders);
-        $this->assertResponseOk();
+        $response = $this->json('POST', '/postmark/inbound', $this->inboundData, $this->authHeaders);
+        $response->assertStatus(200);
 
         Mail::assertNotSent(InboundMail::class);
 
@@ -135,10 +138,11 @@ class PostmarkControllerTest extends \TestCase
     {
         $address = new Address(['email' => $this->inboundData['To']]);
         $address->is_blocked = true;
-        $address->saveOrFail();
+        $address->domain_id = Domain::where('domain', 'example.com')->first()->id;
+        $address->save();
 
-        $this->json('POST', '/postmark/inbound', $this->inboundData, $this->authHeaders);
-        $this->assertResponseOk();
+        $response = $this->json('POST', '/postmark/inbound', $this->inboundData, $this->authHeaders);
+        $response->assertStatus(200);
 
         Mail::assertNotSent(InboundMail::class);
 
@@ -152,10 +156,11 @@ class PostmarkControllerTest extends \TestCase
     {
         $this->inboundData['FromName'] = $this->inboundData['FromFull']['Name'] = '';
 
-        $this->json('POST', '/postmark/inbound', $this->inboundData, $this->authHeaders);
-        $this->assertResponseOk();
+        $response = $this->json('POST', '/postmark/inbound', $this->inboundData, $this->authHeaders);
+        $response->assertStatus(200);
 
-        $this->assertSent(InboundMail::class, function (InboundMail $mail) {
+        Mail::assertSent(InboundMail::class, function (InboundMail $mail) {
+            $mail->build();
             $this->assertEquals(
                 [['address' => config('mail.from.address'), 'name' => 'sender@example.com via '.$mail->getOriginalToEmail()]],
                 $mail->from
@@ -176,8 +181,8 @@ class PostmarkControllerTest extends \TestCase
     {
         $this->inboundData['ToName'] = $this->inboundData['ToFull'][0]['Name'] = '';
 
-        $this->json('POST', '/postmark/inbound', $this->inboundData, $this->authHeaders);
-        $this->assertResponseOk();
+        $response = $this->json('POST', '/postmark/inbound', $this->inboundData, $this->authHeaders);
+        $response->assertStatus(200);
 
         Mail::assertSent(InboundMail::class);
 
@@ -190,26 +195,27 @@ class PostmarkControllerTest extends \TestCase
     {
         $this->authHeaders['PHP_AUTH_PW'] = 'BadPassword';
 
-        $this->json('POST', '/postmark/inbound', $this->inboundData, $this->authHeaders);
-        $this->assertResponseStatus(403);
+        $response = $this->json('POST', '/postmark/inbound', $this->inboundData, $this->authHeaders);
+        $response->assertStatus(403);
 
         Mail::assertNotSent(InboundMail::class);
     }
 
     public function testInboundNoAuth()
     {
-        $this->json('POST', '/postmark/inbound', $this->inboundData);
-        $this->assertResponseStatus(403);
+        $response = $this->json('POST', '/postmark/inbound', $this->inboundData);
+        $response->assertStatus(403);
 
         Mail::assertNotSent(InboundMail::class);
     }
 
     public function testOutbound()
     {
-        $this->json('POST', '/postmark/outbound', $this->outboundData, $this->authHeaders);
-        $this->assertResponseOk();
+        $response = $this->json('POST', '/postmark/outbound', $this->outboundData, $this->authHeaders);
+        $response->assertStatus(200);
 
-        $this->assertSent(OutboundMail::class, function (OutboundMail $mail) {
+        Mail::assertSent(OutboundMail::class, function (OutboundMail $mail) {
+            $mail->build();
             $this->assertEquals([['address' => 'recipient@example.com', 'name' => null]], $mail->from);
             $this->assertEquals([['address' => 'sender@example.com', 'name' => null]], $mail->to);
 
@@ -221,8 +227,8 @@ class PostmarkControllerTest extends \TestCase
     {
         $this->outboundData['From'] = $this->outboundData['FromFull']['Email'] = 'hacker@example.com';
 
-        $this->json('POST', '/postmark/outbound', $this->outboundData, $this->authHeaders);
-        $this->assertResponseOk();
+        $response = $this->json('POST', '/postmark/outbound', $this->outboundData, $this->authHeaders);
+        $response->assertStatus(200);
 
         Mail::assertNotSent(OutboundMail::class);
     }
@@ -231,16 +237,16 @@ class PostmarkControllerTest extends \TestCase
     {
         $this->authHeaders['PHP_AUTH_PW'] = 'BadPassword';
 
-        $this->json('POST', '/postmark/outbound', $this->outboundData, $this->authHeaders);
-        $this->assertResponseStatus(403);
+        $response = $this->json('POST', '/postmark/outbound', $this->outboundData, $this->authHeaders);
+        $response->assertStatus(403);
 
         Mail::assertNotSent(InboundMail::class);
     }
 
     public function testOutboundNoAuth()
     {
-        $this->json('POST', '/postmark/outbound', $this->outboundData);
-        $this->assertResponseStatus(403);
+        $response = $this->json('POST', '/postmark/outbound', $this->outboundData);
+        $response->assertStatus(403);
 
         Mail::assertNotSent(InboundMail::class);
     }

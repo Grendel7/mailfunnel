@@ -4,16 +4,22 @@ namespace Test\Mail;
 
 use App\Mail\InboundMail;
 use App\Models\Address;
+use App\Models\Domain;
 use App\Models\Message;
+use App\Models\User;
 use App\ReplyEmail;
+use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
-use Laravel\Lumen\Testing\DatabaseMigrations;
 use ReflectionClass;
+use Tests\TestCase;
 
-class InboundMailTest extends \TestCase
+class InboundMailTest extends TestCase
 {
-    use ForwardableTest, DatabaseMigrations;
+    use ForwardableTest, RefreshDatabase;
+
+    protected $user;
+    protected $domain;
 
     /**
      * @var InboundMail
@@ -24,73 +30,55 @@ class InboundMailTest extends \TestCase
     {
         parent::setUp();
 
+        $this->user = factory(User::class)->create();
+        $this->domain = Domain::create(['domain' => 'example.com', 'user_id' => $this->user->id]);
+
         $this->inboundMail = new InboundMail('phpunit');
         $this->inboundMail->setOriginalTo('Test Recipient <recipient@example.com>');
         $this->inboundMail->setOriginalFrom('Test Sender <sender@example.com>');
         $this->inboundMail->subject('Test Subject');
 
         Mail::fake();
-
-//        DB::beginTransaction();
-    }
-
-    public function tearDown()
-    {
-        parent::tearDown();
-
-//        DB::rollback();
     }
 
     public function testBuildSetsReplyToAddress()
     {
-        Mail::send($this->inboundMail);
+        $this->inboundMail->build();
 
-        $this->assertSent(InboundMail::class, function (InboundMail $mail) {
-            $expected = [
-                'address' => ReplyEmail::generate('Test Recipient <recipient@example.com>', 'Test Sender <sender@example.com>'),
-                'name' => null,
-            ];
+        $expected = [
+            'address' => ReplyEmail::generate('Test Recipient <recipient@example.com>', 'Test Sender <sender@example.com>'),
+            'name' => null,
+        ];
 
-            $reflection = new ReflectionClass($mail);
-            $property = $reflection->getProperty('replyTo');
-            $property->setAccessible(true);
+        $reflection = new ReflectionClass($this->inboundMail);
+        $property = $reflection->getProperty('replyTo');
+        $property->setAccessible(true);
 
-            $this->assertEquals([$expected], $property->getValue($mail));
-
-            return true;
-        });
+        $this->assertEquals([$expected], $property->getValue($this->inboundMail));
     }
 
     public function testBuildSetsToAddress()
     {
-        Mail::send($this->inboundMail);
+        $this->inboundMail->build();
 
-        $this->assertSent(InboundMail::class, function (InboundMail $mail) {
-            $expected = [
-                'address' => config('mailfunnel.recipient.email'),
-                'name' => config('mailfunnel.recipient.name'),
-            ];
+        $expected = [
+            'address' => $this->user->email,
+            'name' => $this->user->name,
+        ];
 
-            $this->assertEquals([$expected], $mail->to);
-
-            return true;
-        });
+        $this->assertEquals([$expected], $this->inboundMail->to);
     }
 
     public function testBuildSetsFromAddress()
     {
-        Mail::send($this->inboundMail);
+        $this->inboundMail->build();
 
-        $this->assertSent(InboundMail::class, function (InboundMail $mail) {
-            $expected = [
-                'address' => config('mail.from.address'),
-                'name' => $mail->getSafeOriginalFrom() . ' via ' . $mail->getOriginalToEmail(),
-            ];
+        $expected = [
+            'address' => config('mail.from.address'),
+            'name' =>  $this->inboundMail->getSafeOriginalFrom() . ' via ' . $this->inboundMail->getOriginalToEmail(),
+        ];
 
-            $this->assertEquals([$expected], $mail->from);
-
-            return true;
-        });
+        $this->assertEquals([$expected], $this->inboundMail->from);
     }
 
     public function testGetSafeOriginalFrom()
@@ -140,7 +128,8 @@ class InboundMailTest extends \TestCase
     {
         $address = new Address(['email' => $this->inboundMail->getOriginalToEmail()]);
         $address->is_blocked = true;
-        $address->saveOrFail();
+        $address->domain_id = Domain::where('domain', 'example.com')->first()->id;
+        $address->save();
 
         $this->assertFalse($this->inboundMail->validate([]));
         $message = Message::all()->last();

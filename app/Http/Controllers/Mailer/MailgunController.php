@@ -1,7 +1,8 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\Mailer;
 
+use App\Http\Controllers\Controller;
 use App\Mail\InboundMail;
 use App\Mail\OutboundMail;
 use App\ReplyEmail;

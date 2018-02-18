@@ -5,25 +5,35 @@ namespace Test\Http\Controllers;
 use App\Mail\InboundMail;
 use App\Mail\OutboundMail;
 use App\Models\Address;
+use App\Models\Domain;
 use App\Models\Message;
+use App\Models\User;
 use App\ReplyEmail;
 use Faker\Provider\Uuid;
+use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Mail;
-use Illuminate\Validation\Rules\In;
-use Laravel\Lumen\Testing\DatabaseMigrations;
+use Tests\TestCase;
 
-class MailgunControllerTest extends \TestCase
+class MailgunControllerTest extends TestCase
 {
-    use DatabaseMigrations;
+    use RefreshDatabase;
 
     protected $inboundData;
     protected $outboundData;
+
+    public $user;
 
     public function setUp()
     {
         parent::setUp();
 
         Mail::fake();
+
+        $this->user = factory(User::class)->create();
+        Domain::create([
+            'domain' => 'example.com',
+            'user_id' => $this->user->id,
+        ]);
 
         $inReplyTo = '<'.Uuid::uuid().'@example.com>';
 
@@ -81,10 +91,11 @@ class MailgunControllerTest extends \TestCase
 
     public function testInbound()
     {
-        $this->post('/mailgun/inbound', $this->inboundData);
-        $this->assertResponseOk();
+        $response = $this->post('/mailgun/inbound', $this->inboundData);
+        $response->assertStatus(200);
 
-        $this->assertSent(InboundMail::class, function (InboundMail $mail) {
+        Mail::assertSent(InboundMail::class, function (InboundMail $mail) {
+            $mail->build();
             $this->assertEquals(
                 [['address' => config('mail.from.address'), 'name' => 'Bob \'bob@example.com\' via '.$mail->getOriginalToEmail()]],
                 $mail->from
@@ -114,8 +125,8 @@ class MailgunControllerTest extends \TestCase
             return $header;
         }, json_decode($this->inboundData['message-headers'], true)));
 
-        $this->post('/mailgun/inbound', $this->inboundData);
-        $this->assertResponseStatus(406);
+        $response = $this->post('/mailgun/inbound', $this->inboundData);
+        $response->assertStatus(406);
 
         Mail::assertNotSent(InboundMail::class);
 
@@ -129,10 +140,11 @@ class MailgunControllerTest extends \TestCase
     {
         $address = new Address(['email' => $this->inboundData['recipient']]);
         $address->is_blocked = true;
-        $address->saveOrFail();
+        $address->domain_id = Domain::where('domain', 'example.com')->first()->id;
+        $address->save();
 
-        $this->post('/mailgun/inbound', $this->inboundData);
-        $this->assertResponseStatus(406);
+        $response = $this->post('/mailgun/inbound', $this->inboundData);
+        $response->assertStatus(406);
 
         Mail::assertNotSent(InboundMail::class);
 
@@ -146,10 +158,11 @@ class MailgunControllerTest extends \TestCase
     {
         $this->inboundData['From'] = $this->inboundData['sender'];
 
-        $this->post('/mailgun/inbound', $this->inboundData);
-        $this->assertResponseOk();
+        $response = $this->post('/mailgun/inbound', $this->inboundData);
+        $response->assertStatus(200);
 
-        $this->assertSent(InboundMail::class, function (InboundMail $mail) {
+        Mail::assertSent(InboundMail::class, function (InboundMail $mail) {
+            $mail->build();
             $this->assertEquals(
                 [['address' => config('mail.from.address'), 'name' => 'bob@example.com via '.$mail->getOriginalToEmail()]],
                 $mail->from
@@ -170,8 +183,8 @@ class MailgunControllerTest extends \TestCase
     {
         $this->inboundData['To'] = $this->inboundData['recipient'];
 
-        $this->post('/mailgun/inbound', $this->inboundData);
-        $this->assertResponseOk();
+        $response = $this->post('/mailgun/inbound', $this->inboundData);
+        $response->assertStatus(200);
 
         Mail::assertSent(InboundMail::class);
 
@@ -183,8 +196,8 @@ class MailgunControllerTest extends \TestCase
     public function testInboundBadAuth()
     {
         $this->inboundData['signature'] = str_random();
-        $this->post('/mailgun/inbound', $this->inboundData);
-        $this->assertResponseStatus(403);
+        $response = $this->post('/mailgun/inbound', $this->inboundData);
+        $response->assertStatus(403);
 
         Mail::assertNotSent(InboundMail::class);
     }
@@ -192,18 +205,19 @@ class MailgunControllerTest extends \TestCase
     public function testInboundNoAuth()
     {
         $this->inboundData['signature'] = '';
-        $this->post('/mailgun/inbound', $this->inboundData);
-        $this->assertResponseStatus(403);
+        $response = $this->post('/mailgun/inbound', $this->inboundData);
+        $response->assertStatus(403);
 
         Mail::assertNotSent(InboundMail::class);
     }
 
     public function testOutbound()
     {
-        $this->post('/mailgun/outbound', $this->outboundData);
-        $this->assertResponseOk();
+        $response = $this->post('/mailgun/outbound', $this->outboundData);
+        $response->assertStatus(200);
 
-        $this->assertSent(OutboundMail::class, function (OutboundMail $mail) {
+        Mail::assertSent(OutboundMail::class, function (OutboundMail $mail) {
+            $mail->build();
             $this->assertEquals([['address' => 'recipient@example.com', 'name' => null]], $mail->from);
             $this->assertEquals([['address' => 'sender@example.com', 'name' => null]], $mail->to);
 
@@ -216,8 +230,8 @@ class MailgunControllerTest extends \TestCase
         $this->outboundData['From'] = 'hacker@example.com';
         $this->outboundData['sender'] = 'hacker@example.com';
 
-        $this->post('/mailgun/outbound', $this->outboundData);
-        $this->assertResponseStatus(406);
+        $response = $this->post('/mailgun/outbound', $this->outboundData);
+        $response->assertStatus(406);
 
         Mail::assertNotSent(OutboundMail::class);
     }
@@ -226,8 +240,8 @@ class MailgunControllerTest extends \TestCase
     {
         $this->outboundData['signature'] = str_random();
 
-        $this->post('/mailgun/outbound', $this->outboundData);
-        $this->assertResponseStatus(403);
+        $response = $this->post('/mailgun/outbound', $this->outboundData);
+        $response->assertStatus(403);
 
         Mail::assertNotSent(InboundMail::class);
     }
@@ -235,8 +249,8 @@ class MailgunControllerTest extends \TestCase
     public function testOutboundNoAuth()
     {
         $this->outboundData['signature'] = '';
-        $this->post('/mailgun/outbound', $this->outboundData);
-        $this->assertResponseStatus(403);
+        $response = $this->post('/mailgun/outbound', $this->outboundData);
+        $response->assertStatus(403);
 
         Mail::assertNotSent(InboundMail::class);
     }

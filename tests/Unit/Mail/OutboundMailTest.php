@@ -5,8 +5,9 @@ namespace Test\Mail;
 use App\Mail\OutboundMail;
 use App\ReplyEmail;
 use Illuminate\Support\Facades\Mail;
+use Tests\TestCase;
 
-class OutboundMailTest extends \TestCase
+class OutboundMailTest extends TestCase
 {
     use ForwardableTest;
 
@@ -27,23 +28,14 @@ class OutboundMailTest extends \TestCase
         Mail::fake();
     }
 
-    public function testContructor()
-    {
-        new OutboundMail(str_random());
-    }
-
     public function testSetReplyEmail()
     {
         $this->outboundMail->setText('test');
 
-        Mail::send($this->outboundMail);
+        $this->outboundMail->build();
 
-        $this->assertSent(OutboundMail::class, function (OutboundMail $mail) {
-            $this->assertEquals([['address' => 'sender@example.com', 'name' => 'Test Sender']], $mail->from);
-            $this->assertEquals([['address' => 'receiver@example.com', 'name' => 'Test Receiver']], $mail->to);
-
-            return true;
-        });
+        $this->assertEquals([['address' => 'sender@example.com', 'name' => 'Test Sender']], $this->outboundMail->from);
+        $this->assertEquals([['address' => 'receiver@example.com', 'name' => 'Test Receiver']], $this->outboundMail->to);
     }
 
     public function getForwardable()
