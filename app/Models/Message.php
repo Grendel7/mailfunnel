@@ -26,6 +26,13 @@ class Message extends Model
         return $this->belongsTo(Address::class);
     }
 
+    /**
+     * All of the relationships to be touched.
+     *
+     * @var array
+     */
+    protected $touches = ['address'];
+
     public function getIsRejectedAttribute($value)
     {
         return (boolean) $value;

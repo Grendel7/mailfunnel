@@ -11,5 +11,15 @@ class Address extends Model
      *
      * @var array
      */
-    protected $fillable = ['email'];
+    protected $fillable = ['email', 'domain_id'];
+
+    public function domain()
+    {
+        return $this->belongsTo(Domain::class);
+    }
+
+    public function messages()
+    {
+        return $this->hasMany(Message::class);
+    }
 }

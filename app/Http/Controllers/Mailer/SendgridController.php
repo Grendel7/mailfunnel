@@ -6,6 +6,7 @@ use App\Mail\InboundMail;
 use App\Mail\OutboundMail;
 use App\ReplyEmail;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Mail;
 
 class SendgridController extends Controller
 {
@@ -39,7 +40,7 @@ class SendgridController extends Controller
         }
 
         if ($mail->validate($request->all())) {
-            $this->app->mailer->send($mail);
+            Mail::send($mail);
         }
 
         return response('SUCCESS');
@@ -70,7 +71,7 @@ class SendgridController extends Controller
             ]);
         }
 
-        $this->app->mailer->send($mail);
+        Mail::send($mail);
 
         return response('SUCCESS');
     }

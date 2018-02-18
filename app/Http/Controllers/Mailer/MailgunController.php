@@ -6,6 +6,7 @@ use App\Mail\InboundMail;
 use App\Mail\OutboundMail;
 use App\ReplyEmail;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Mail;
 
 class MailgunController extends Controller
 {
@@ -40,7 +41,7 @@ class MailgunController extends Controller
         }
 
         if ($mail->validate($request->all())) {
-            $this->app->mailer->send($mail);
+            Mail::send($mail);
             return response('SUCCESS');
         } else {
             return response('ERROR', 406);
@@ -72,7 +73,7 @@ class MailgunController extends Controller
             ]);
         }
 
-        $this->app->mailer->send($mail);
+        Mail::send($mail);
 
         return response('SUCCESS');
     }

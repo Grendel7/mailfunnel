@@ -6,6 +6,7 @@ use App\Mail\InboundMail;
 use App\Mail\OutboundMail;
 use App\ReplyEmail;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Mail;
 
 class PostmarkController extends Controller
 {
@@ -27,7 +28,7 @@ class PostmarkController extends Controller
         $mail->setOriginalTo($request->input('OriginalRecipient'));
 
         if (!empty($request->input('FromName'))) {
-            $mail->setOriginalFrom("{$request->input('FromName')} <{$request->input('From')}>");
+            $mail->setOriginalFrom(trim($request->input('FromName'), '"')." <{$request->input('From')}>");
         } else {
             $mail->setOriginalFrom($request->input('From'));
         }
@@ -41,7 +42,7 @@ class PostmarkController extends Controller
         }
 
         if ($mail->validate($request->all())) {
-            $this->app->mailer->send($mail);
+            Mail::send($mail);
         }
 
         return response('SUCCESS');
@@ -69,7 +70,7 @@ class PostmarkController extends Controller
             $mail->attachData($attachment['data'], $attachment['name']);
         }
 
-        $this->app->mailer->send($mail);
+        Mail::send($mail);
 
         return response('SUCCESS');
     }

@@ -2,23 +2,12 @@
 
 namespace App\Http\Controllers;
 
-use Laravel\Lumen\Application;
-use Laravel\Lumen\Routing\Controller as BaseController;
+use Illuminate\Foundation\Bus\DispatchesJobs;
+use Illuminate\Routing\Controller as BaseController;
+use Illuminate\Foundation\Validation\ValidatesRequests;
+use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 
 class Controller extends BaseController
 {
-    /**
-     * @var Application
-     */
-    protected $app;
-
-    /**
-     * Controller constructor.
-     *
-     * @param Application $app
-     */
-    public function __construct(Application $app)
-    {
-        $this->app = $app;
-    }
+    use AuthorizesRequests, DispatchesJobs, ValidatesRequests;
 }
